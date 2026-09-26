@@ -12,31 +12,33 @@ type Props = {
 }
 
 const PostCard: React.FC<Props> = ({ post, loading }: Props) => {
+    // search results come wrapped as { item: post } — normalize both shapes
+    const p = post?.item ?? post;
     // return the PostCard
     return (
         <>
-            {(!loading && post) && (
-                <article key={post.slug ? post.slug : post.item.slug} className={`${PostGridStyles['post']}`}>
+            {(!loading && p) && (
+                <article key={p.slug} className={`${PostGridStyles['post']}`}>
                     <div className={`${PostGridStyles['post__thumbnail']}`}> 
-                        <div className={`${PostGridStyles['post__tags']}`}><Tags tags={post.tags ? post.tags : post.item.tags} /></div>
+                        <div className={`${PostGridStyles['post__tags']}`}><Tags tags={p.tags} /></div>
                         <Thumbnail
-                        slug={post.slug ? post.slug : post.item.slug}
-                        title={post.title ? post.title : post.item.title}
-                        src={post.thumbnail ? post.thumbnail : post.item.thumbnail}
+                        slug={p.slug}
+                        title={p.title}
+                        src={p.thumbnail}
                         />
                     </div>
                     <div>
                         <h3 className={`h4`}>
-                            <Link legacyBehavior href={`/posts/${post.slug ? post.slug : post.item.slug}`}>
-                            <a>{post.title ? post.title : post.item.title}</a>
+                            <Link legacyBehavior href={`/posts/${p.slug}`}>
+                            <a>{p.title}</a>
                             </Link>
                         </h3>
-                        <p>{post.description ? post.description : post.item.description}</p>
+                        <p>{p.description}</p>
                     </div>
                 </article>
             )}
 
-            {(loading || !post) && (
+            {(loading || !p) && (
                 <span>Loading...</span>
             )}
         </>

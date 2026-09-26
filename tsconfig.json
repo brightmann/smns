@@ -22,9 +22,12 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "components/EmbedGist.js", "components/Footer.js"  ],
+    "**/*.tsx",
+    "components/EmbedGist.js",
+    "components/Footer.js"
+  ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "open-next.config.ts"
   ]
 }

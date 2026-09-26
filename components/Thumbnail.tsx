@@ -14,13 +14,20 @@ type Props = {
 
 
 const Thumbnail: React.FC<Props> = ({ title, src, slug}: Props) => {
-  // Add the Thumbnail cover image
-    const image = (
+  // Add the Thumbnail cover image (posts without a thumbnail get a placeholder)
+    const image = src ? (
         <Image
         width={600}
         height={400}
         src={src}
         alt={`Thumbnail cover image ${title}`}
+        className={ThumbnailStyles['thumbnail']}
+        />
+    ) : (
+        <div
+        style={{ width: 600, maxWidth: '100%', aspectRatio: '3 / 2', background: '#e5e5e5' }}
+        role="img"
+        aria-label={`Thumbnail cover image ${title}`}
         className={ThumbnailStyles['thumbnail']}
         />
     );

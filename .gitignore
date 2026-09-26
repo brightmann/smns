@@ -35,3 +35,10 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# Cloudflare/OpenNext build output
+.open-next/
+.wrangler/
+# generated post data (rebuilt by `npm run prebuild`)
+data/posts-data.json
+data/pages-data.json

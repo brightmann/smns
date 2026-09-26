@@ -7,7 +7,9 @@
     "start": "next start",
     "lint": "next lint",
     "cache-posts": "node cache/cache.js",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "prebuild": "npm run cache-posts && node scripts/precompute-posts.js",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@vercel/analytics": "^1.0.1",
@@ -17,7 +19,7 @@
     "husky": "^8.0.3",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
-    "next": "^13.4.4",
+    "next": "^14.2.0",
     "next-mdx-remote": "^4.4.1",
     "normalize.css": "^8.0.1",
     "postcss": "^8.4.1",
@@ -25,15 +27,17 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.15.0",
     "@types/jest": "^29.5.1",
     "@types/lodash": "^4.14.195",
     "@types/node": "^16.11.10",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^18.2.4",
     "eslint": "7.32.0",
-    "eslint-config-next": "^13.4.4",
+    "eslint-config-next": "^14.2.0",
     "sass": "^1.62.1",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "wrangler": "^4.141.0"
   },
   "husky": {
     "hooks": {

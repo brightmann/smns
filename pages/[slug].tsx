@@ -1,4 +1,3 @@
-import { serialize } from 'next-mdx-remote/serialize';
 import { GetStaticProps, GetStaticPaths } from 'next';
 import Head from 'next/head';
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
@@ -6,7 +5,7 @@ import Config from "../app.config"
 
 import Thumbnail from '../components/Thumbnail';
 import { IPost } from '../interfaces/post';
-import { getAllPages, getPage } from '../utils/mdxUtils';
+import { getAllPages, getPage, getPageSource } from '../utils/mdxUtils';
 import { ParsedUrlQuery } from 'querystring';
 
 // props type
@@ -55,10 +54,9 @@ interface Iparams extends ParsedUrlQuery {
 export const getStaticProps: GetStaticProps = async (context) => {
 
     const { slug } = context.params as Iparams;
-    // get the slug
-    const { content, data } = getPage(slug);
-    // serialize the data on the server side
-    const mdxSource = await serialize(content, { scope: data });
+    // get the front matter and the precomputed serialized MDX source
+    const { data } = getPage(slug);
+    const mdxSource = getPageSource(slug);
     return {
         props: {
             source: mdxSource,

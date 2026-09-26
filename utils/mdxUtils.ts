@@ -1,163 +1,124 @@
-import matter from 'gray-matter';
-import {join} from 'path';
-import fs from 'fs';
-// import { verify } from 'crypto';
-
+// Workers-compatible post/page loading: all content is precomputed at build time
+// into data/posts-data.json and data/pages-data.json (see scripts/precompute-posts.js).
+import postsData from '../data/posts-data.json';
+import pagesData from '../data/pages-data.json';
 
 // structure of items
-type Items =  {
-    // each post has a parameter key that takes the value of a string
-    [key: string] : string
-}
+type Items = {
+  // each post has a parameter key that takes the value of a string
+  [key: string]: string;
+};
 
 // structure of a post
 type Post = {
-    data:{
-        // each post has a parameter key that takes the value of a string
-        [key: string] : string
-    };
-    // each post will include the post content associated with its parameter key
-    content: string
-}
+  data: {
+    // each post has a parameter key that takes the value of a string
+    [key: string]: string;
+  };
+  // each post will include the post content associated with its parameter key
+  content: string;
+};
 
-// structure of a post
+// structure of a page
 type Page = {
-    data:{
-        // each post has a parameter key that takes the value of a string
-        [key: string] : string
-    };
-    // each post will include the post content associated with its parameter key
-    content: string
+  data: {
+    [key: string]: string;
+  };
+  content: string;
+};
+
+type PrecomputedItem = {
+  slug: string;
+  data: { [key: string]: any };
+  source: any;
+};
+
+const posts = postsData as unknown as PrecomputedItem[];
+const pages = pagesData as unknown as PrecomputedItem[];
+
+function findItem(items: PrecomputedItem[], slug: string): PrecomputedItem {
+  const item = items.find((i) => i.slug === slug);
+  if (!item) throw new Error(`No item found for slug "${slug}"`);
+  return item;
 }
 
-// path to our list of available posts
-const POSTS_PATH = join(process.cwd(),'_posts');
+// load the post items
+function getItems(
+  items: PrecomputedItem[],
+  filePath: string,
+  fields: string[] = []
+): Items {
+  // create a slug from the mdx file location
+  const slug = filePath.replace(/\.mdx?$/, '');
+  // get the front matter data
+  const { data } = findItem(items, slug);
 
-// get the file paths of all available list of posts
-function getPostsFilePaths(): string[]{
-    return (
-        // return the mdx file post path
-        fs.readdirSync(POSTS_PATH)
-        // load the post content from the mdx files
-        .filter((path) => /\.mdx?$/.test(path))
-    )
+  const result: Items = {};
+
+  // just load and include the content needed
+  fields.forEach((field) => {
+    // load the slug
+    if (field === 'slug') {
+      result[field] = slug;
+    }
+    // check if the above specified field exists on data
+    if (data[field]) {
+      // verify the fields has data
+      result[field] = data[field];
+    }
+  });
+  // return the post items
+  return result;
+}
+
+export function getPostItems(filePath: string, fields: string[] = []): Items {
+  return getItems(posts, filePath, fields);
+}
+
+export function getPageItems(filePath: string, fields: string[] = []): Items {
+  return getItems(pages, filePath, fields);
 }
 
 // getting a single post
-export function getPost(slug:string):Post {
-    // add path/location to a single post
-    const fullPath = join(POSTS_PATH,`${slug}.mdx`);
-    // post's content
-    const fileContents = fs.readFileSync(fullPath,'utf-8');
-    // get the front matter data and content
-    const {data,content} = matter(fileContents);
-    // return the front matter data and content
-    return { data,content};
-}
-
-// load the post items
-export function getPostItems(filePath:string,fields:string[] = []): Items{
-    // create a slug from the mdx file location
-    const slug = filePath.replace(/\.mdx?$/,"");
-    // get the front matter data and content
-    const {data,content} = getPost(slug);
-
-    const items: Items = {};
-
-    // just load and include the content needed
-    fields.forEach((field) => {
-        // load the slug
-        if(field === 'slug'){
-            items[field] = slug;
-        }
-        // load the post content
-        if(field === 'content'){
-            items[field] = content;
-        }
-
-        // check if the above specified field exists on data
-        if(data[field]){
-            // verify the fileds has data
-            items[field] = data[field];
-        }
-    });
-    // return the post items
-    return items;
-}
-
-// getting all posts
-export function getAllPosts(fields: string[]): Items []{
-    // add paths for getting all posts 
-    const filePaths = getPostsFilePaths();
-    // get the posts from the filepaths with the needed fields sorted by date
-    const posts = filePaths.map((filePath) => getPostItems(filePath,fields)).sort((post1,post2) => post1.date < post2.date ? 1 : -1);
-    // return the available post
-    return posts;
-}
-
-
-
-// path to our list of available pages
-const PAGES_PATH = join(process.cwd(),'_pages');
-
-// get the file paths of all available list of posts
-function getPagesFilePaths(): string[]{
-    return (
-        // return the mdx file post path
-        fs.readdirSync(PAGES_PATH)
-        // load the post content from the mdx files
-        .filter((path) => /\.mdx?$/.test(path))
-    )
-}
-
-// load the post items
-export function getPageItems(filePath:string,fields:string[] = []): Items{
-    // create a slug from the mdx file location
-    const slug = filePath.replace(/\.mdx?$/,"");
-    // get the front matter data and content
-    const {data,content} = getPage(slug);
-
-    const items: Items = {};
-
-    // just load and include the content needed
-    fields.forEach((field) => {
-        // load the slug
-        if(field === 'slug'){
-            items[field] = slug;
-        }
-        // load the post content
-        if(field === 'content'){
-            items[field] = content;
-        }
-
-        // check if the above specified field exists on data
-        if(data[field]){
-            // verify the fileds has data
-            items[field] = data[field];
-        }
-    });
-    // return the post items
-    return items;
+export function getPost(slug: string): Post {
+  const { data } = findItem(posts, slug);
+  // content is no longer shipped raw; the precomputed serialized source is used instead
+  return { data, content: '' };
 }
 
 // getting a single page
-export function getPage(slug:string):Page {
-    // add path/location to a single page
-    const fullPath = join(PAGES_PATH,`${slug}.mdx`);
-    // post's content
-    const fileContents = fs.readFileSync(fullPath,'utf-8');
-    // get the front matter data and content
-    const { data, content } = matter(fileContents);
-    // return the front matter data and content
-    return { data, content };
+export function getPage(slug: string): Page {
+  const { data } = findItem(pages, slug);
+  return { data, content: '' };
 }
 
 // getting all posts
-export function getAllPages(fields: string[]): Items []{
-    // add paths for getting all posts 
-    const filePaths = getPagesFilePaths();
-    // get the posts from the filepaths with the needed fields sorted by date
-    const posts = filePaths.map((filePath) => getPageItems(filePath,fields)).sort((page1,page2) => page1.date < page2.date ? 1 : -1);
-    // return the available post
-    return posts;
+export function getAllPosts(fields: string[]): Items[] {
+  const filePaths = posts.map((p) => `${p.slug}.mdx`);
+  // get the posts from the filepaths with the needed fields sorted by date
+  const result = filePaths
+    .map((filePath) => getPostItems(filePath, fields))
+    .sort((post1, post2) => (post1.date < post2.date ? 1 : -1));
+  // return the available posts
+  return result;
+}
+
+// getting all pages
+export function getAllPages(fields: string[]): Items[] {
+  const filePaths = pages.map((p) => `${p.slug}.mdx`);
+  // get the pages from the filepaths with the needed fields sorted by date
+  const result = filePaths
+    .map((filePath) => getPageItems(filePath, fields))
+    .sort((page1, page2) => (page1.date < page2.date ? 1 : -1));
+  // return the available pages
+  return result;
+}
+
+// precomputed serialized MDX sources, keyed by slug
+export function getPostSource(slug: string): unknown {
+  return findItem(posts, slug).source;
+}
+
+export function getPageSource(slug: string): unknown {
+  return findItem(pages, slug).source;
 }
